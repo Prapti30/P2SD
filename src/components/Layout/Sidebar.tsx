@@ -7,7 +7,8 @@ const menuItems = [
   { to: "/alerts", icon: Bell, label: "Predictive Intelligence Threshold Alerts" },
   { to: "/operation-dashboard", icon: LayoutDashboard, label: "Operation & Maintanace Dashboard" },
   { to: "/operation-graph", icon: LineChart, label: "Operation & Maintanace Graphs"},
-  { to: "/recipients", icon: Users, label: "Recipients" },
+  { to: "/operation-alerts", icon: MessageSquare, label: "Operation & Maintanace Alerts"},
+  //{ to: "/recipients", icon: Users, label: "Recipients" },
 ];
 
 const Sidebar = () => {

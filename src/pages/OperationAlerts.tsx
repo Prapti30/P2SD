@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { historicalData as omHistoricalData } from "@/data/mockData"; 
-import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { Clock, Mail, TrendingUp, Check, Filter } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { historicalData as omHistoricalData } from "@/data/mockData";
 
-// --- Mock Alert Data ---
-// This mocks the data structure you showed in your screenshot.
+import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { Clock, Mail, TrendingUp, Check } from "lucide-react";
+
+// ---------------- MOCK ALERT DATA ----------------
 const mockAlerts = [
     {
         id: 1,
@@ -17,7 +17,6 @@ const mockAlerts = [
         previousValue: 1380,
         currentValue: 1450,
         threshold: 1400,
-        recipients: ["safety@company.com", "ops@company.com"],
     },
     {
         id: 2,
@@ -28,189 +27,206 @@ const mockAlerts = [
         previousValue: 78,
         currentValue: 85,
         threshold: 80,
-        recipients: ["safety@company.com"],
     },
     {
         id: 3,
         metric: "Vibration_mm_s",
         title: "Vibration Level (mm/s)",
-        status: "NORMAL", 
+        status: "NORMAL",
         timestamp: "01/12/2025, 01:00:00",
         previousValue: 4.8,
         currentValue: 3.2,
         threshold: 4.5,
-        recipients: ["maintenance@company.com"],
     },
     {
         id: 4,
         metric: "FlowRate_m3h",
         title: "Flow Rate (m³/h)",
-        status: "WARNING", 
+        status: "WARNING",
         timestamp: "01/12/2025, 02:00:00",
         previousValue: 650,
         currentValue: 700,
         threshold: 680,
-        recipients: ["ops@company.com"],
     },
 ];
 
-// --- Reusable Alert Card Component ---
+// ---------------- REUSABLE ALERT CARD ----------------
 const AlertCard = ({ alert }) => {
-    // Determine status colors
-    let statusClass = "bg-green-600";
-    if (alert.status === "CRITICAL") statusClass = "bg-red-600";
-    if (alert.status === "WARNING") statusClass = "bg-yellow-500";
-    
-    // Determine color for current value text
-    let valueTextColor = "text-foreground";
-    if (alert.status === "CRITICAL") valueTextColor = "text-red-600";
-    if (alert.status === "WARNING") valueTextColor = "text-yellow-600";
+    let statusClass =
+        alert.status === "CRITICAL"
+            ? "bg-red-600"
+            : alert.status === "WARNING"
+            ? "bg-yellow-500"
+            : "bg-green-600";
 
+    let valueTextColor =
+        alert.status === "CRITICAL"
+            ? "text-red-600"
+            : alert.status === "WARNING"
+            ? "text-yellow-600"
+            : "text-foreground";
 
-    // Get relevant historical data for the chart context
     const chartContextData = useMemo(() => {
-        // Use a short, relevant slice of data for the sparkline
-        return omHistoricalData.slice(-12).map(d => ({
-            time: new Date(d.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            // Dynamically access the value using the metric string
-            value: d[alert.metric as keyof typeof d] || 0, 
+        return omHistoricalData.slice(-12).map((d) => ({
+            time: new Date(d.timestamp).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+            }),
+            value: d[alert.metric] || 0,
         }));
     }, [alert.metric]);
 
     const difference = (alert.currentValue - alert.threshold).toFixed(1);
 
+    // All emails replaced with praptimore78@gmail.com
+    const recipients = ["praptimore78@gmail.com"];
+
     return (
         <Card className="p-6 space-y-4 shadow-md border">
-            {/* Header and Status */}
+            {/* HEADER */}
             <div className="flex justify-between items-start">
                 <div>
-                    <h2 className="text-xl font-semibold text-foreground">{alert.title}</h2>
+                    <h2 className="text-xl font-semibold">{alert.title}</h2>
                     <div className="flex items-center text-sm text-muted-foreground mt-1">
                         <Clock className="w-3.5 h-3.5 mr-1" />
                         <span>{alert.timestamp}</span>
                     </div>
                 </div>
-                <div className={`text-xs font-bold text-white px-3 py-1 rounded ${statusClass}`}>
+                <div
+                    className={`text-xs font-bold text-white px-3 py-1 rounded ${statusClass}`}
+                >
                     {alert.status}
                 </div>
             </div>
 
-            {/* Values and Context Graph */}
+            {/* VALUES + SPARKLINE */}
             <div className="grid grid-cols-3 items-center">
-                <div className="space-y-1">
+                <div>
                     <p className="text-sm text-muted-foreground">Previous Value</p>
-                    <p className="text-2xl font-bold">{alert.previousValue}</p>
+                    <p className="text-2xl font-semibold">{alert.previousValue}</p>
                 </div>
-                
-                {/* Mini Chart Context */}
-                <div className="h-12 w-full flex justify-center items-center">
+
+                <div className="h-12 flex items-center">
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={chartContextData}>
                             <XAxis dataKey="time" hide />
-                            <Tooltip 
-                                contentStyle={{ 
-                                    backgroundColor: 'hsl(var(--card))', 
-                                    border: '1px solid hsl(var(--border))',
-                                    borderRadius: 'var(--radius)',
-                                    padding: '4px 8px'
-                                }} 
-                                labelStyle={{ display: 'none' }} 
-                                formatter={(value) => [`${value}`, 'Value']} 
+                            <Tooltip
+                                contentStyle={{
+                                    backgroundColor: "hsl(var(--card))",
+                                    border: "1px solid hsl(var(--border))",
+                                    borderRadius: "var(--radius)",
+                                    padding: "4px 8px",
+                                }}
+                                labelStyle={{ display: "none" }}
                             />
-                            <Line 
-                                type="monotone" 
-                                dataKey="value" 
-                                // Set stroke color dynamically based on statusClass (using mock Tailwind colors)
-                                stroke={statusClass === "bg-red-600" ? "hsl(var(--danger))" : 
-                                        statusClass === "bg-yellow-500" ? "hsl(var(--warning))" : "hsl(var(--success))"}
-                                strokeWidth={2} 
-                                dot={false} 
+                            <Line
+                                type="monotone"
+                                dataKey="value"
+                                stroke={
+                                    alert.status === "CRITICAL"
+                                        ? "red"
+                                        : alert.status === "WARNING"
+                                        ? "orange"
+                                        : "green"
+                                }
+                                strokeWidth={2}
+                                dot={false}
                             />
                         </LineChart>
                     </ResponsiveContainer>
-                    {/* Simplified trend icon */}
-                    <TrendingUp className={`w-5 h-5 ${valueTextColor} ml-2`} /> 
+
+                    <TrendingUp className={`w-5 h-5 ml-2 ${valueTextColor}`} />
                 </div>
-                
-                <div className="space-y-1 text-right">
+
+                <div className="text-right">
                     <p className="text-sm text-muted-foreground">Current Value</p>
-                    <p className={`text-2xl font-bold ${valueTextColor}`}>{alert.currentValue}</p>
+                    <p className={`text-2xl font-semibold ${valueTextColor}`}>
+                        {alert.currentValue}
+                    </p>
                 </div>
             </div>
 
-            <div className="h-px bg-border my-2" />
+            <div className="h-px bg-border" />
 
-            {/* Footer Details */}
-            <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
+            {/* FOOTER */}
+            <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                    <div className="flex gap-2 items-center">
                         <Mail className="w-4 h-4 text-orange-500" />
                         <span>Email sent to:</span>
-                        {alert.recipients.map((email, index) => (
-                            <span key={index} className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded">
-                                {email}
+                        {recipients.map((e, i) => (
+                            <span
+                                key={i}
+                                className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded"
+                            >
+                                {e}
                             </span>
                         ))}
                     </div>
+
                     <span className="flex items-center text-green-600 font-medium">
-                        <Check className="w-4 h-4 mr-1" /> Email Sent
+                        <Check className="w-4 h-4 mr-1" />
+                        Email Sent
                     </span>
                 </div>
 
-                <div className="text-sm text-muted-foreground pt-1">
-                    Threshold: <span className="font-semibold text-foreground">{alert.threshold}</span> (Exceeded by {difference})
+                <div className="text-muted-foreground">
+                    Threshold:{" "}
+                    <span className="font-semibold">{alert.threshold}</span> (Exceeded by{" "}
+                    {difference})
                 </div>
             </div>
         </Card>
     );
-}
+};
 
-// --- Main Operation Alerts Component ---
-
+// ---------------- MAIN PAGE ----------------
 const OperationAlerts = () => {
-    const [filterStatus, setFilterStatus] = useState("ALL"); 
-    
-    const filteredAlerts = useMemo(() => {
-        if (filterStatus === "ALL") return mockAlerts;
-        return mockAlerts.filter(alert => alert.status === filterStatus);
+    const [filterStatus, setFilterStatus] = useState("ALL");
+
+    const filtered = useMemo(() => {
+        return filterStatus === "ALL"
+            ? mockAlerts.filter((a) => a.status === "CRITICAL" || a.status === "WARNING")
+            : mockAlerts.filter((a) => a.status === filterStatus);
     }, [filterStatus]);
 
-    // Simple status filter options (for placeholder)
-    const statusOptions = ["ALL", "CRITICAL", "WARNING", "NORMAL"];
+    const options = ["ALL", "CRITICAL", "WARNING"];
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold text-foreground">Operation Threshold Alerts</h1>
-                    <p className="text-muted-foreground">Monitor threshold breaches and notifications for operational assets</p>
+                    <h1 className="text-3xl font-bold">Operation Threshold Alerts</h1>
+                    <p className="text-muted-foreground">
+                        Monitor threshold breaches and notifications
+                    </p>
                 </div>
-                
-                {/* Status Filter Dropdown */}
+
+                {/* FILTER */}
                 <div className="flex items-center gap-2">
-                    <Label htmlFor="status-filter" className="text-sm">Filter by Status:</Label>
+                    <Label htmlFor="status">Status Filter:</Label>
                     <select
-                        id="status-filter"
+                        id="status"
+                        className="border rounded p-2 text-sm"
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="p-2 border rounded text-sm"
                     >
-                        {statusOptions.map(status => (
-                            <option key={status} value={status}>{status}</option>
+                        {options.map((o) => (
+                            <option key={o} value={o}>
+                                {o}
+                            </option>
                         ))}
                     </select>
                 </div>
             </div>
 
-            {/* Alert List */}
+            {/* ALERT LIST */}
             <div className="space-y-4">
-                {filteredAlerts.length > 0 ? (
-                    filteredAlerts.map(alert => (
-                        <AlertCard key={alert.id} alert={alert} />
-                    ))
+                {filtered.length ? (
+                    filtered.map((alert) => <AlertCard key={alert.id} alert={alert} />)
                 ) : (
                     <Card className="p-6 text-center text-muted-foreground">
-                        No alerts matching the current filter settings.
+                        No alerts found for this filter.
                     </Card>
                 )}
             </div>

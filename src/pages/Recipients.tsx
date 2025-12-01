@@ -2,13 +2,12 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { defaultRecipients } from "@/data/mockData";
 import { Mail, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Recipients = () => {
-  const [recipients, setRecipients] = useState<string[]>(defaultRecipients);
+  // ✅ Only your email at initial load
+  const [recipients, setRecipients] = useState<string[]>(["praptimore78@gmail.com"]);
   const [newEmail, setNewEmail] = useState("");
   const { toast } = useToast();
 
@@ -28,25 +27,25 @@ const Recipients = () => {
     if (recipients.includes(newEmail)) {
       toast({
         title: "Duplicate Email",
-        description: "This email is already in the recipients list.",
+        description: "This email is already added.",
         variant: "destructive",
       });
       return;
     }
 
     setRecipients([...recipients, newEmail]);
-    setNewEmail("");
     toast({
       title: "Recipient Added",
-      description: `${newEmail} will now receive threshold alerts.`,
+      description: `${newEmail} will now receive alerts.`,
     });
+    setNewEmail("");
   };
 
   const removeRecipient = (email: string) => {
     setRecipients(recipients.filter((r) => r !== email));
     toast({
       title: "Recipient Removed",
-      description: `${email} has been removed from the recipients list.`,
+      description: `${email} has been removed.`,
     });
   };
 
@@ -63,6 +62,7 @@ const Recipients = () => {
             <Mail className="w-5 h-5" />
             Add New Recipient
           </h3>
+
           <div className="flex gap-2">
             <Input
               type="email"
@@ -95,9 +95,10 @@ const Recipients = () => {
                   </div>
                   <div>
                     <p className="font-medium text-foreground">{email}</p>
-                    <p className="text-sm text-muted-foreground">Receives all threshold alerts</p>
+                    <p className="text-sm text-muted-foreground">Receives alert notifications</p>
                   </div>
                 </div>
+
                 <Button
                   variant="ghost"
                   size="icon"
@@ -118,10 +119,10 @@ const Recipients = () => {
           How Notifications Work
         </h3>
         <ul className="space-y-2 text-sm text-muted-foreground">
-          <li>• All recipients receive immediate email alerts when thresholds are exceeded</li>
-          <li>• Email includes metric name, previous/current values, and severity level</li>
-          <li>• You can add or remove recipients at any time</li>
-          <li>• Each alert is logged in the Threshold Alerts page with full details</li>
+          <li>• Recipients immediately get email alerts when thresholds are exceeded.</li>
+          <li>• Email includes metric details and severity level.</li>
+          <li>• You can add or remove recipients at any time.</li>
+          <li>• All alerts are logged on the Threshold Alerts page.</li>
         </ul>
       </Card>
     </div>
