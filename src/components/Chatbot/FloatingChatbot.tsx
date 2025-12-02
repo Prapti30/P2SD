@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare, X, Send } from "lucide-react";
+import { MessageSquare, X, Send, Loader } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,35 +19,56 @@ const FloatingChatbot = () => {
     },
   ]);
   const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMessage: Message = { role: "user", content: input };
     setMessages((prev) => [...prev, userMessage]);
-
-    // Simulate AI response (replace with actual LLM API call)
-    setTimeout(() => {
-      const responses: Record<string, string> = {
-        pressure: "Max Pressure (psi) indicates the maximum operating pressure in the pipe. Values above 1400 psi trigger warnings. Current reading shows elevated pressure requiring monitoring.",
-        temperature: "Temperature monitoring is critical for pipe integrity. High temperatures can accelerate corrosion. The system alerts when temperature exceeds 80°C.",
-        corrosion: "Corrosion Impact measures the percentage of material degradation. It's calculated based on thickness loss and material properties. Values above 14% require immediate attention.",
-        threshold: "Thresholds are safety limits for each metric. When exceeded, the system sends alerts to designated recipients and logs the event for compliance.",
-        default: "I can provide insights on pressure, temperature, corrosion metrics, and threshold management. Ask me about any KPI or safety concern!",
-      };
-
-      const lowerInput = input.toLowerCase();
-      let response = responses.default;
-
-      if (lowerInput.includes("pressure")) response = responses.pressure;
-      else if (lowerInput.includes("temperature") || lowerInput.includes("temp")) response = responses.temperature;
-      else if (lowerInput.includes("corrosion")) response = responses.corrosion;
-      else if (lowerInput.includes("threshold") || lowerInput.includes("alert")) response = responses.threshold;
-
-      setMessages((prev) => [...prev, { role: "assistant", content: response }]);
-    }, 500);
-
     setInput("");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/ChatbotADXFunction", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: input,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      
+      // Check if the response contains an error
+      if (data?.error) {
+        const errorDetails = data.details || data.message || JSON.stringify(data);
+        throw new Error(`Backend error: ${data.error} - ${errorDetails}`);
+      }
+      
+      // Extract the assistant's message from the Databricks response
+      const assistantMessage = 
+        data?.choices?.[0]?.message?.content || 
+        data?.generated_response || 
+        data?.response || 
+        data?.result || 
+        data?.message || 
+        "I couldn't generate a response. Please try again.";
+
+      setMessages((prev) => [...prev, { role: "assistant", content: assistantMessage }]);
+    } catch (error: any) {
+      const errorMsg = error?.message || "Failed to connect to the assistant. Please check your connection.";
+      setMessages((prev) => [...prev, { role: "assistant", content: `Error: ${errorMsg}` }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -97,6 +118,14 @@ const FloatingChatbot = () => {
                   </div>
                 </div>
               ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-muted text-foreground p-3 rounded-lg flex items-center gap-2">
+                    <Loader className="w-4 h-4 animate-spin" />
+                    <p className="text-sm">Thinking...</p>
+                  </div>
+                </div>
+              )}
             </div>
           </ScrollArea>
 
@@ -113,8 +142,14 @@ const FloatingChatbot = () => {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about metrics..."
                 className="flex-1"
+                disabled={isLoading}
               />
-              <Button type="submit" size="icon" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+              <Button 
+                type="submit" 
+                size="icon" 
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                disabled={isLoading || !input.trim()}
+              >
                 <Send className="w-4 h-4" />
               </Button>
             </form>

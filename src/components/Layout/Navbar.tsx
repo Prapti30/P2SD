@@ -5,9 +5,9 @@ const Navbar = () => {
         
         {/* 1. Logo Image (CG.png) */}
         <img 
-          src="/CG.png" 
+          src="/CG_Logo_white 1.svg" 
           alt="P2SD Logo" 
-          className="w-8 h-8 object-contain" 
+          className="w-17 h-9 object-contain" 
         />
         
         {/* 2. Vertical Bar Separator */}
@@ -17,7 +17,7 @@ const Navbar = () => {
         <div>
           <h1 className="text-2xl font-bold text-primary-foreground">P2SD</h1>
           <p className="text-xs text-secondary font-medium tracking-wide">
-            Predict • Prevent • Sustain • Detain
+            Predict • Prevent • Sustain • Detect
           </p>
         </div>
       </div>

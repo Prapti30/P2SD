@@ -2,13 +2,13 @@ import { NavLink } from "@/components/NavLink";
 import { LayoutDashboard, LineChart, Bell, Users, MessageSquare } from "lucide-react";
 
 const menuItems = [
-  { to: "/", icon: LayoutDashboard, label: "Predictive Intelligence Dashboard" },
-  { to: "/graphs", icon: LineChart, label: "Predictive Intelligence Graphs" },
-  { to: "/alerts", icon: Bell, label: "Predictive Intelligence Threshold Alerts" },
+  //{ to: "/", icon: LayoutDashboard, label: "Predictive Intelligence Dashboard" },
+  //{ to: "/graphs", icon: LineChart, label: "Predictive Intelligence Graphs" },
+  //{ to: "/alerts", icon: Bell, label: "Predictive Intelligence Threshold Alerts" },
   { to: "/operation-dashboard", icon: LayoutDashboard, label: "Operation & Maintanace Dashboard" },
   { to: "/operation-graph", icon: LineChart, label: "Operation & Maintanace Graphs"},
   { to: "/operation-alerts", icon: MessageSquare, label: "Operation & Maintanace Alerts"},
-  //{ to: "/recipients", icon: Users, label: "Recipients" },
+ // { to: "/recipients", icon: Users, label: "Recipients" },
 ];
 
 const Sidebar = () => {

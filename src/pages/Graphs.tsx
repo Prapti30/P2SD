@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { historicalData, defaultThresholds } from "@/data/mockData";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
 import { Settings, ChevronDown, RefreshCw } from "lucide-react"; // Added ChevronDown and RefreshCw
 
 // --- Filter Options ---
@@ -47,6 +47,43 @@ const Graphs = () => {
   const [selectedGrade, setSelectedGrade] = useState<string>("");
   // -------------------------
 
+  // Material-specific bounds (upper/lower) and other metric thresholds
+  const materialBounds: Record<string, { pressure: { lower: number; upper: number }; temperature: { lower: number; upper: number }; corrosion?: number; thickness?: { min: number; lossMax: number } }> = {
+    "Carbon Steel": {
+      pressure: { lower: 0, upper: 2000 },
+      temperature: { lower: -40, upper: 120 },
+      corrosion: 5,
+      thickness: { min: 20, lossMax: 3 },
+    },
+    "Stainless Steel": {
+      pressure: { lower: 0, upper: 2300 },
+      temperature: { lower: -40, upper: 140 },
+      corrosion: 5,
+      thickness: { min: 20, lossMax: 3 },
+    },
+    "PVC": {
+      pressure: { lower: 0, upper: 400 },
+      temperature: { lower: -10, upper: 60 },
+      corrosion: 8,
+      thickness: { min: 10, lossMax: 2 },
+    },
+    "HDPE": {
+      pressure: { lower: 0, upper: 800 },
+      temperature: { lower: -20, upper: 80 },
+      corrosion: 8,
+      thickness: { min: 10, lossMax: 2 },
+    },
+  };
+
+  // Current bounds used for chart reference lines: prefer selected material bounds, fall back to editable thresholds
+  const currentPressureBounds = selectedMaterial && materialBounds[selectedMaterial]
+    ? materialBounds[selectedMaterial].pressure
+    : { lower: 0, upper: thresholds.Max_Pressure_psi };
+
+  const currentTemperatureBounds = selectedMaterial && materialBounds[selectedMaterial]
+    ? materialBounds[selectedMaterial].temperature
+    : { lower: 0, upper: thresholds.Temperature_C };
+
   const getLineColor = (value: number, threshold: number) => {
     // Note: This function isn't used to color the line in the current structure, 
     // only used for legend color logic, but kept for completeness.
@@ -61,10 +98,10 @@ const Graphs = () => {
 
     // Simulate filtering by material and grade
     if (selectedMaterial) {
-        filtered = filtered.filter(d => d.Material === selectedMaterial);
+      filtered = filtered.filter(d => (d as any).Material === selectedMaterial);
     }
     if (selectedGrade) {
-        filtered = filtered.filter(d => d.Grade === selectedGrade);
+      filtered = filtered.filter(d => (d as any).Grade === selectedGrade);
     }
 
     return filtered;
@@ -194,10 +231,22 @@ const Graphs = () => {
                     }}
                   />
                   <Legend />
+                  <ReferenceLine
+                    y={currentPressureBounds.upper}
+                    stroke="hsl(var(--danger))"
+                    strokeDasharray="5 5"
+                    label={{ value: `Upper: ${currentPressureBounds.upper}`, position: 'top', fill: 'hsl(var(--danger))', fontSize: 12 }}
+                  />
+                  <ReferenceLine
+                    y={currentPressureBounds.lower}
+                    stroke="hsl(var(--muted-foreground))"
+                    strokeDasharray="3 3"
+                    label={{ value: `Lower: ${currentPressureBounds.lower}`, position: 'bottom', fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  />
                   <Line
                     type="monotone"
                     dataKey="pressure"
-                    stroke={chartData[chartData.length - 1]?.pressure >= thresholds.Max_Pressure_psi ? "hsl(var(--warning))" : "hsl(var(--success))"}
+                    stroke={chartData[chartData.length - 1]?.pressure >= currentPressureBounds.upper ? "hsl(var(--danger))" : (chartData[chartData.length - 1]?.pressure >= currentPressureBounds.upper * 0.9 ? "hsl(var(--warning))" : "hsl(var(--success))")}
                     strokeWidth={2}
                     dot={false}
                   />
@@ -242,10 +291,22 @@ const Graphs = () => {
                     }}
                   />
                   <Legend />
+                  <ReferenceLine
+                    y={currentTemperatureBounds.upper}
+                    stroke="hsl(var(--danger))"
+                    strokeDasharray="5 5"
+                    label={{ value: `Upper: ${currentTemperatureBounds.upper}`, position: 'top', fill: 'hsl(var(--danger))', fontSize: 12 }}
+                  />
+                  <ReferenceLine
+                    y={currentTemperatureBounds.lower}
+                    stroke="hsl(var(--muted-foreground))"
+                    strokeDasharray="3 3"
+                    label={{ value: `Lower: ${currentTemperatureBounds.lower}`, position: 'bottom', fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  />
                   <Line
                     type="monotone"
                     dataKey="temperature"
-                    stroke={chartData[chartData.length - 1]?.temperature >= thresholds.Temperature_C ? "hsl(var(--warning))" : "hsl(var(--success))"}
+                    stroke={chartData[chartData.length - 1]?.temperature >= currentTemperatureBounds.upper ? "hsl(var(--danger))" : (chartData[chartData.length - 1]?.temperature >= currentTemperatureBounds.upper * 0.9 ? "hsl(var(--warning))" : "hsl(var(--success))")}
                     strokeWidth={2}
                     dot={false}
                   />
